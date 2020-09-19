@@ -100,7 +100,10 @@ async function readFileAsDataURL(filename) {
   return `data:${mime};base64,${base64}`
 }
 
-function buildExportDefaultCode(modulePath, prefix = "") {
+function buildExportDefaultCode(modulePath, prefix = "", keepImport = false) {
+  if (keepImport) {
+    return `${prefix}\nconst img = require('./${modulePath}'); export default img;`
+  }
   return `${prefix}\nexport default ${JSON.stringify(modulePath)}`
 }
 
@@ -225,22 +228,23 @@ export default (initialOptions = {}) => {
       }
 
       const mode = await detectOpMode(id, options)
+      const keepImport = options.keepImport
 
       switch (mode) {
         case "inline": {
           const newAssetPath = await readFileAsDataURL(id)
-          return buildExportDefaultCode(newAssetPath, idComment)
+          return buildExportDefaultCode(newAssetPath, idComment, keepImport)
         }
         case "copy": {
           const assetName = await getAssetName(id, options)
           assetsToCopy.push({ assetName, filename: id })
           const newAssetPath = getAssetPublicPath(assetName, options.publicPath)
-          return buildExportDefaultCode(newAssetPath, idComment)
+          return buildExportDefaultCode(newAssetPath, idComment, keepImport)
         }
         case "rebase": {
           const assetName = relative(options.rebasePath, id)
           const newAssetPath = getAssetPublicPath(assetName, options.publicPath)
-          return buildExportDefaultCode(newAssetPath, idComment)
+          return buildExportDefaultCode(newAssetPath, idComment, keepImport)
         }
         default: {
           this.warn(`Invalid mode: ${mode}`)
