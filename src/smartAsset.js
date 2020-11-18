@@ -102,7 +102,9 @@ async function readFileAsDataURL(filename) {
 
 function buildExportDefaultCode(modulePath, prefix = "", keepImport = false) {
   if (keepImport) {
-    return `${prefix}\nconst img = require('./${modulePath}'); export default img;`
+    // when webpack load a module from package.json's module, it use require('./${modulePath}').default,other using require require('./${modulePath}')
+    // https://github.com/webpack/webpack/issues/4742
+    return `${prefix}\nconst img = require('./${modulePath}').default || require('./${modulePath}'); export default img;`
   }
   return `${prefix}\nexport default ${JSON.stringify(modulePath)}`
 }
